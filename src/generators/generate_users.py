@@ -32,3 +32,6 @@ def genUsers(number):
     for i in range(number):
         yield User.generate()
 
+#for users in genUsers(10):
+#    print(users)
+
