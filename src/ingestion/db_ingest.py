@@ -6,6 +6,9 @@ def hash_address(address):
 def hash_user(user):
     raw = f"{user['first_name']}{user['last_name']}{user['email']}"
     return hashlib.sha256(raw.encode()).hexdigest()
+def hash_product(product):
+    raw = f"{product['name']}{product['price']}{product['category']}{product['sku']}"
+    return hashlib.sha256(raw.encode()).hexdigest()
 
 def insert_address(address):
     row_hash = hash_address(address)
@@ -56,6 +59,25 @@ def insert_user(user):
                     user["email"],
                     user["phone_number"],
                     address_id,
+                    row_hash
+                )
+            )
+        conn.commit()
+
+def insert_product(product):
+    row_hash = hash_product(product)
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+            cur.execute(
+                """
+                INSERT INTO products (name, price, category, sku, row_hash)
+                VALUES (%s,%s,%s,%s,%s)
+                """,
+                (
+                    product["name"],
+                    product["price"],
+                    product["category"],
+                    product["sku"],
                     row_hash
                 )
             )

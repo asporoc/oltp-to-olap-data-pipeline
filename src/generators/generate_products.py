@@ -22,8 +22,7 @@ class Product:
             "name": name,
             "category": category,
             "price": float(fake.pydecimal(left_digits=3, right_digits=2, positive=True)),
-            "sku": fake.unique.ean13(),
-            "in_stock": fake.boolean(chance_of_getting_true=80),
+            "sku": fake.unique.ean13()
         }
 def genProducts(number):
     for i in range(number):
