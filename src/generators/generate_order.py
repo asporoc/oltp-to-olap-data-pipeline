@@ -10,13 +10,13 @@ class Order:
     def generate(cls):
         status = random.choice(list(STATUSES))
         return {
-            "status": status
+            "order_status": status,
+            "numberOfItems": random.randint(1, 5)
         }
 
 def genOrders(number):
     for i in range(number):
         yield Order.generate()
 
-for order in genOrders(3):
-    print(order)
+
 

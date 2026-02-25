@@ -1,6 +1,7 @@
 from faker import Faker
 import random
 
+
 FAKERS = {
     "DE": Faker("de_DE"),  # Germany
     "FR": Faker("fr_FR"),  # France
