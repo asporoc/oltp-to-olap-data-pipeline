@@ -3,26 +3,31 @@ import hashlib
 import random
 from faker import Faker
 
+from ..generators.generate_payments import Payment
+
 faker = Faker()
 
 from ..generators.generate_order import genOrders
 
 
 def hash_address(address):
-    raw = f"{address['street']}{address['postal_code']}{address['city']}{address['country']}"
+    raw = f"{address["street"]}{address["postal_code"]}{address["city"]}{address["country"]}"
     return hashlib.sha256(raw.encode()).hexdigest()
 def hash_user(user):
-    raw = f"{user['first_name']}{user['last_name']}{user['email']}"
+    raw = f"{user["first_name"]}{user["last_name"]}{user["email"]}"
     return hashlib.sha256(raw.encode()).hexdigest()
 def hash_product(product):
-    raw = f"{product['name']}{product['price']}{product['category']}{product['sku']}"
+    raw = f"{product["name"]}{product["price"]}{product["category"]}{product["sku"]}"
     return hashlib.sha256(raw.encode()).hexdigest()
 def hash_order(order, user_id, shipping_address_id, billing_address_id, total):
-    raw = f"{order['order_status']}{user_id}{shipping_address_id}{billing_address_id}{total}"
+    raw = f"{order["order_status"]}{user_id}{shipping_address_id}{billing_address_id}{total}"
     print(raw)
     return hashlib.sha256(raw.encode()).hexdigest()
 def hash_order_item(order_id, product_id, quantity, unit_price):
     raw = f"{order_id}{product_id}{quantity}{unit_price}"
+    return hashlib.sha256(raw.encode()).hexdigest()
+def hash_payment(order_id, payment_method, status, amount):
+    raw = f"{order_id}{payment_method}{status}{amount}"
     return hashlib.sha256(raw.encode()).hexdigest()
 
 def insert_address(address):
@@ -146,7 +151,7 @@ def insert_order(order):
             )
             order_id = cur.fetchone()[0]
             for item in random_products:
-                row_hash_order_item = (order_id, item[1], '1', item[0])
+                row_hash_order_item = (order_id, item[1], "1", item[0])
                 cur.execute(
                     """
                     INSERT INTO order_items (order_id, product_id, quantity, unit_price, row_hash)
@@ -154,11 +159,50 @@ def insert_order(order):
                     (
                         order_id,
                         item[1],
-                        '1',
+                        "1",
                         item[0],
                         row_hash_order_item
                     )
                 )
+def insert_payment():
+    with get_connection() as conn:
+        with conn.cursor() as cur:
+
+            cur.execute(
+                """
+                SELECT o.order_id, o.order_status, o.total_amount
+                FROM orders o
+                LEFT JOIN payments p ON o.order_id = p.order_id
+                WHERE p.order_id IS NULL
+                LIMIT 1
+                """
+            )
+
+            row = cur.fetchone()
+
+            if row is None:
+                return None
+
+            order_id, order_status, order_amount = row
+
+            payment = Payment.generate(order_id, order_status, order_amount)
+            row_hash = hash_payment(payment["order_id"], payment["payment_method"], order_status, order_amount)
+
+            cur.execute(
+                """
+                INSERT INTO payments (order_id, payment_method, payment_status, amount, row_hash)
+                VALUES (%s, %s, %s, %s, %s)
+                """,
+                (
+                    payment["order_id"],
+                    payment["payment_method"],
+                    payment["payment_status"],
+                    payment["amount"],
+                    row_hash
+                )
+            )
+            return None
+
 
 
 
