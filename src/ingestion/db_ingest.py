@@ -1,4 +1,5 @@
-from .db_connection import get_connection
+from src.utils.db_connection import get_connection
+from src.utils.hashing import hash_values
 import hashlib
 import random
 from faker import Faker
@@ -7,31 +8,8 @@ from ..generators.generate_payments import Payment
 
 faker = Faker()
 
-from ..generators.generate_order import genOrders
-
-
-def hash_address(address):
-    raw = f"{address["street"]}{address["postal_code"]}{address["city"]}{address["country"]}"
-    return hashlib.sha256(raw.encode()).hexdigest()
-def hash_user(user):
-    raw = f"{user["first_name"]}{user["last_name"]}{user["email"]}"
-    return hashlib.sha256(raw.encode()).hexdigest()
-def hash_product(product):
-    raw = f"{product["name"]}{product["price"]}{product["category"]}{product["sku"]}"
-    return hashlib.sha256(raw.encode()).hexdigest()
-def hash_order(order, user_id, shipping_address_id, billing_address_id, total):
-    raw = f"{order["order_status"]}{user_id}{shipping_address_id}{billing_address_id}{total}"
-    print(raw)
-    return hashlib.sha256(raw.encode()).hexdigest()
-def hash_order_item(order_id, product_id, quantity, unit_price):
-    raw = f"{order_id}{product_id}{quantity}{unit_price}"
-    return hashlib.sha256(raw.encode()).hexdigest()
-def hash_payment(order_id, payment_method, status, amount):
-    raw = f"{order_id}{payment_method}{status}{amount}"
-    return hashlib.sha256(raw.encode()).hexdigest()
-
 def insert_address(address):
-    row_hash = hash_address(address)
+    row_hash = hash_values(address["street"],address["postal_code"],address["city"],address["country"])
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -53,8 +31,7 @@ def insert_address(address):
     return address_id
 
 def insert_user(user):
-    row_hash = hash_user(user)
-    # Extract address data from user dict
+    row_hash = hash_values(user["first_name"],user["last_name"],user["email"])
     address_data = {
         "street": user["street"],
         "postal_code": user["postal_code"],
@@ -63,7 +40,6 @@ def insert_user(user):
         "country_code": user["country_code"]
     }
 
-    # Insert address and get id
     address_id = insert_address(address_data)
     print(address_id)
     with get_connection() as conn:
@@ -85,7 +61,7 @@ def insert_user(user):
         conn.commit()
 
 def insert_product(product):
-    row_hash = hash_product(product)
+    row_hash = hash_values(product["name"],product["price"],product["category"],product["sku"])
     with get_connection() as conn:
         with conn.cursor() as cur:
             cur.execute(
@@ -134,7 +110,7 @@ def insert_order(order):
             )
             random_products = cur.fetchall()
             total_price = sum(product[0] for product in random_products)
-            row_hash = hash_order(order, random_user_id, shipping_address_id, random_address_id, total_price)
+            row_hash = hash_values(order["order_status"],random_user_id,shipping_address_id,random_address_id,total_price)
             cur.execute(
                 """
                 INSERT INTO orders (user_id, shipping_address_id, billing_address_id, order_status, total_amount, row_hash)
@@ -151,7 +127,7 @@ def insert_order(order):
             )
             order_id = cur.fetchone()[0]
             for item in random_products:
-                row_hash_order_item = (order_id, item[1], "1", item[0])
+                row_hash_order_item = hash_values(order_id, item[1], "1", item[0])
                 cur.execute(
                     """
                     INSERT INTO order_items (order_id, product_id, quantity, unit_price, row_hash)
@@ -186,7 +162,7 @@ def insert_payment():
             order_id, order_status, order_amount = row
 
             payment = Payment.generate(order_id, order_status, order_amount)
-            row_hash = hash_payment(payment["order_id"], payment["payment_method"], order_status, order_amount)
+            row_hash = hash_values(payment["order_id"],payment["payment_method"],order_status,order_amount)
 
             cur.execute(
                 """
