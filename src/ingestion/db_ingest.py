@@ -1,6 +1,6 @@
 from src.utils.db_connection import get_connection
 from src.utils.hashing import hash_values
-import hashlib
+from src.config import oltp
 import random
 from faker import Faker
 
@@ -10,7 +10,7 @@ faker = Faker()
 
 def insert_address(address):
     row_hash = hash_values(address["street"],address["postal_code"],address["city"],address["country"])
-    with get_connection() as conn:
+    with get_connection(oltp) as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -42,7 +42,7 @@ def insert_user(user):
 
     address_id = insert_address(address_data)
     print(address_id)
-    with get_connection() as conn:
+    with get_connection(oltp) as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -62,7 +62,7 @@ def insert_user(user):
 
 def insert_product(product):
     row_hash = hash_values(product["name"],product["price"],product["category"],product["sku"])
-    with get_connection() as conn:
+    with get_connection(oltp) as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -81,7 +81,7 @@ def insert_product(product):
 
 def insert_order(order):
 
-    with get_connection() as conn:
+    with get_connection(oltp) as conn:
         with conn.cursor() as cur:
             cur.execute(
                 """
@@ -141,7 +141,7 @@ def insert_order(order):
                     )
                 )
 def insert_payment():
-    with get_connection() as conn:
+    with get_connection(oltp) as conn:
         with conn.cursor() as cur:
 
             cur.execute(
