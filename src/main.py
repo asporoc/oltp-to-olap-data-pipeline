@@ -11,41 +11,9 @@ from pipeline.metadata.run_logger import (
     finish_pipeline_run,
     fail_pipeline_run
 )
+from src.pipeline.metadata.runs import get_runs, get_run_by_id
+from src.pipeline.pipeline_run.run import run_pipeline
 from src.utils import get_connection
-
-def main():
-    run_id = None
-
-    with get_connection(olap) as olap_conn:
-        cur = olap_conn.cursor()
-
-        try:
-            run_id = start_pipeline_run(
-                cur,
-                name='oltp_to_olap',
-                trigger='manual',
-                notes='local dev run'
-            )
-            olap_conn.commit()
-
-            extract_users(run_id, olap_conn)
-            extract_addresses(run_id, olap_conn)
-            extract_orders(run_id, olap_conn)
-            extract_order_items(run_id, olap_conn)
-            extract_payments(run_id, olap_conn)
-            extract_products(run_id, olap_conn)
-
-
-            finish_pipeline_run(cur, run_id)
-            olap_conn.commit()
-
-        except Exception as e:
-            if run_id is not None:
-                fail_pipeline_run(cur, run_id, str(e))
-                olap_conn.commit()
-            raise
-#for user in genUsers(15):
-#    insert_user(user)
-
 if __name__ == "__main__":
-    main()
+    #run_pipeline()
+    print(get_run_by_id(4))
