@@ -1,15 +1,12 @@
-from src.generators import genUsers, genProducts, genOrders
-from src.ingestion.db_ingest import insert_user, insert_product, insert_order, insert_payment
 from src.pipeline.extract.extract_addresses import extract_addresses
 from src.pipeline.extract.extract_order_items import extract_order_items
 from src.pipeline.extract.extract_orders import extract_orders
 from src.pipeline.extract.extract_payments import extract_payments
 from src.pipeline.extract.extract_products import extract_products
-from src.pipeline.extract.extract_users import extract_users
-from src.config import olap,oltp
+from src.config import olap
 
 from pipeline.extract.extract_users import extract_users
-from pipeline.metadata.metadata_generator import (
+from pipeline.metadata.run_logger import (
     start_pipeline_run,
     finish_pipeline_run,
     fail_pipeline_run

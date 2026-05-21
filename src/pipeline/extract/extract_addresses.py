@@ -1,6 +1,6 @@
 from src.utils import get_connection
 from src.config import oltp
-from src.pipeline.metadata.metadata_generator import (
+from src.pipeline.metadata.run_logger import (
     start_pipeline_step,
     finish_pipeline_step,
     fail_pipeline_step
