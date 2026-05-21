@@ -1,5 +1,6 @@
 from src.config import olap
 from src.utils import get_connection
+from fastapi import HTTPException
 def get_runs():
     with get_connection(olap) as conn:
         curr = conn.cursor()
@@ -24,7 +25,7 @@ def get_run_by_id(run_id):
         WHERE run_id = %s""",(run_id,))
         row = curr.fetchone()
         if row is None:
-            return "run ID not found"
+            raise HTTPException(status_code=404, detail="run not found")
         else:
             columns = [desc[0] for desc in curr.description]
             result = [dict(zip(columns, row))]
